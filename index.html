@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa de Vendedores — Rio Grande do Norte</title>
+<title>Mapa Dismese — Rio Grande do Norte</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -20,7 +20,7 @@ body.light{
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
 header{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:1000;gap:12px;}
-.logo{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:-.02em}
+.logo{font-family:'Inter',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:-.02em}
 .logo span{color:var(--accent)}
 .hbtns{display:flex;gap:8px;align-items:center;flex-shrink:0}
 .badge{background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
@@ -36,7 +36,7 @@ main{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 53px)}
 #loading p{font-size:.9rem;color:var(--muted)}
 .sidebar{border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;z-index:10}
 .sb-head{padding:16px 16px 12px;border-bottom:1px solid var(--border)}
-.sb-head h3{font-family:'Syne',sans-serif;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:2px}
+.sb-head h3{font-family:'Inter',sans-serif;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:2px}
 .sb-head p{font-size:.72rem;color:var(--muted)}
 .btn-todos-wrap{padding:8px 10px 4px;border-bottom:1px solid var(--border)}
 .btn-todos{width:100%;padding:7px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
@@ -52,11 +52,11 @@ main{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 53px)}
 .legend-sep{border-top:1px solid var(--border);margin:5px 0}
 .stats{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:6px}
 .stat{text-align:center;flex:1}
-.stat-n{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--accent)}
+.stat-n{font-family:'Inter',sans-serif;font-size:1.1rem;font-weight:800;color:var(--accent)}
 .stat-l{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .info{padding:13px;border-top:1px solid var(--border);background:var(--surface2);min-height:80px}
-.info h4{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px}
-.info-city{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:800;color:var(--text);margin-bottom:5px}
+.info h4{font-family:'Inter',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px}
+.info-city{font-family:'Inter',sans-serif;font-size:.92rem;font-weight:800;color:var(--text);margin-bottom:5px}
 .info-seller{display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--muted);margin-top:3px}
 .info-dot{width:9px;height:9px;border-radius:50%}
 .info-ph{font-size:.78rem;color:var(--muted);font-style:italic}
@@ -64,7 +64,7 @@ main{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 53px)}
 </head>
 <body>
 <header>
-  <div class="logo">Mapa de Vendedores &mdash; <span>Rio Grande do Norte</span></div>
+  <div class="logo">Mapa Dismese &mdash; <span>Rio Grande do Norte</span></div>
   <div class="hbtns">
     <span class="badge" id="badge-cov">Carregando...</span>
     <button class="btn" onclick="toggleTheme()" id="btn-theme">☀️ Modo Claro</button>
@@ -109,7 +109,6 @@ const VEND = {
   "DASSAYEV RODRIGUES":{cor:"#4ade80",muns:["NATAL","PARNAMIRIM","NOVA CRUZ","MACAIBA","SAO GONCALO DO AMARANTE","EXTREMOZ","ACU","CURRAIS NOVOS","JOAO CAMARA","MACAU","TOUROS","CAICO","SAO JOSE DE MIPIBU","MOSSORO","CEARA MIRIM","ALTO DO RODRIGUES","CANGUARETAMA","SANTO ANTONIO"]},
   "PEDRO PAULO":{cor:"#60a5fa",muns:["NATAL","JOAO CAMARA","SAO GONCALO DO AMARANTE","MAXARANGUAPE","GOIANINHA","EXTREMOZ","TOUROS","JANDAIRA","CEARA MIRIM","LAGOA D ANTA","SAO JOSE DE MIPIBU","CANGUARETAMA","TIBAU DO SUL","PARNAMIRIM","PEDRA GRANDE","BAIA FORMOSA","ARES","SAO BENTO DO NORTE","SAO MIGUEL DO GOSTOSO","SANTO ANTONIO","MONTANHAS","PEDRO VELHO","POCO BRANCO","TAIPU","RIO DO FOGO","SENADOR GEORGINO AVELINO","PUREZA","NISIA FLORESTA","PARAZINHO","LAGOA DE PEDRAS","ESPIRITO SANTO","VILA FLOR","VARZEA","LAJES"]},
   "JULIO CESAR":{cor:"#f472b6",muns:["GUAMARE","MOSSORO","ACU","ANGICOS","SANTANA DO MATOS","PENDENCIAS","AREIA BRANCA","GOVERNADOR DIX SEPT ROSADO","MACAU","IPANGUACU","AFONSO BEZERRA","TIBAU","RIACHO DA CRUZ","GROSSOS","PORTO DO MANGUE","ITAJA","BARAUNA","SAO RAFAEL","ALTO DO RODRIGUES","JANDAIRA","FERNANDO PEDROZA","CARNAUBAIS","LAJES","CARAUBAS","PEDRO AVELINO","SERRA DO MEL"]},
-  "TAMILA DE ARAUJO":{cor:"#1e3a8a",muns:["CEARA MIRIM","TIBAU DO SUL"]}
 };
 
 function norm(s){
@@ -133,13 +132,10 @@ const map = L.map("map",{zoomControl:true,attributionControl:true});
 let geojsonLayer=null, allFeatures=[], semCovNames=[], activeV=null;
 
 function styleFeature(feature){
-  const key = norm(feature.properties.nome||"");
-  const vendors = MV[key]||[];
-  const cor = vendors.length ? vendors[0].cor : null;
   return{
-    fillColor: cor||"#334155",
-    fillOpacity: cor?0.82:0.25,
-    color: isDark()?"#475569":"#94a3b8",
+    fillColor:"#ffffff",
+    fillOpacity:1,
+    color:isDark() ? "#475569" : "#cbd5e1",
     weight:0.8,
   };
 }
@@ -150,16 +146,61 @@ function onEachFeature(feature,layer){
   const vendors = MV[key]||[];
 
   layer.on({
-    mouseover: e=>{e.target.setStyle({weight:2.5,color:isDark()?"#ffffff":"#1e293b"});e.target.bringToFront();},
-    mouseout:  e=>{if(activeV===null) geojsonLayer&&geojsonLayer.resetStyle(e.target);},
+
+    mouseover: e=>{
+      const layer = e.target;
+
+      if(activeV && activeV !== "__sem__") return;
+
+      const key = norm(feature.properties.nome || "");
+      const vendors = MV[key] || [];
+
+      layer.setStyle({
+        weight:2,
+        color:"#111827",
+        fillColor: vendors.length ? vendors[0].cor : "#d1d5db",
+        fillOpacity:0.95
+      });
+
+      layer.bringToFront();
+    },
+
+    mouseout: e=>{
+      const layer = e.target;
+
+      if(activeV===null){
+
+        layer.setStyle({
+          fillColor:"#ffffff",
+          fillOpacity:1,
+          color:isDark() ? "#475569" : "#cbd5e1",
+          weight:0.8
+        });
+
+      }
+    },
+
     click: ()=>{
       const panel=document.getElementById("info-panel");
-      panel.innerHTML=`<h4>Município Selecionado</h4>
+
+      panel.innerHTML=`
+        <h4>Município Selecionado</h4>
+
         <div class="info-city">${name}</div>
-        ${vendors.length
-          ?vendors.map(v=>`<div class="info-seller"><div class="info-dot" style="background:${v.cor}"></div>${v.vend}</div>`).join("")
-          :`<div class="info-ph">Sem vendedor atribuído</div>`}`;
+
+        ${
+          vendors.length
+          ? vendors.map(v=>`
+              <div class="info-seller">
+                <div class="info-dot" style="background:${v.cor}"></div>
+                ${v.vend}
+              </div>
+            `).join("")
+          : `<div class="info-ph">Sem vendedor atribuído</div>`
+        }
+      `;
     }
+
   });
 
   layer.bindTooltip(()=>{
@@ -253,24 +294,89 @@ function buildLegend(){
 }
 
 function highlight(v,el){
-  if(activeV===v){showAll();return;}
+
+  if(activeV===v){
+    showAll();
+    return;
+  }
+
   activeV=v;
-  document.querySelectorAll(".li").forEach(i=>i.classList.remove("active"));
+
+  document.querySelectorAll(".li")
+    .forEach(i=>i.classList.remove("active"));
+
   el.classList.add("active");
-  document.getElementById("btn-todos").classList.remove("active");
-  geojsonLayer&&geojsonLayer.eachLayer(layer=>{
-    const vendors=MV[norm(layer.feature.properties.nome||"")]||[];
-    const match=vendors.some(x=>x.vend===v);
-    layer.setStyle({fillOpacity:match?0.92:0.06,weight:match?1.5:0.4,color:match?(isDark()?"#ffffff":"#1e293b"):(isDark()?"#334155":"#cbd5e1")});
-    if(match)layer.bringToFront();
+
+  document.getElementById("btn-todos")
+    .classList.remove("active");
+
+  geojsonLayer.eachLayer(layer=>{
+
+    const key = norm(layer.feature.properties.nome || "");
+    const vendors = MV[key] || [];
+
+    const vendedor = vendors.find(x=>x.vend===v);
+
+    if(vendedor){
+
+      layer.setStyle({
+        fillColor:vendedor.cor,
+        fillOpacity:0.95,
+        color:"#111827",
+        weight:1.4
+      });
+
+      layer.bringToFront();
+
+    }else{
+
+      layer.setStyle({
+        fillColor:"#ffffff",
+        fillOpacity:1,
+        color:"#d1d5db",
+        weight:0.6
+      });
+
+    }
+
   });
-  const muns=[...new Set(VEND[v].muns.map(m=>{
-    const f=allFeatures.find(f=>norm(f.properties.nome||"")==norm(m));
-    return f?f.properties.nome:m;
-  }))].sort();
-  document.getElementById("info-panel").innerHTML=`<h4>Vendedor Selecionado</h4>
-    <div class="info-city" style="display:flex;align-items:center;gap:8px"><div class="info-dot" style="background:${VEND[v].cor}"></div>${v}</div>
-    <div style="margin-top:7px;font-size:.71rem;color:var(--muted);line-height:1.7;max-height:85px;overflow-y:auto">${muns.join(" · ")}</div>`;
+
+  const muns=[...new Set(
+    VEND[v].muns.map(m=>{
+      const f=allFeatures.find(
+        f=>norm(f.properties.nome||"")==norm(m)
+      );
+
+      return f ? f.properties.nome : m;
+    })
+  )].sort();
+
+  document.getElementById("info-panel").innerHTML=`
+    <h4>Vendedor Selecionado</h4>
+
+    <div class="info-city"
+      style="display:flex;align-items:center;gap:8px">
+
+      <div class="info-dot"
+        style="background:${VEND[v].cor}">
+      </div>
+
+      ${v}
+
+    </div>
+
+    <div style="
+      margin-top:7px;
+      font-size:.71rem;
+      color:var(--muted);
+      line-height:1.7;
+      max-height:85px;
+      overflow-y:auto">
+
+      ${muns.join(" · ")}
+
+    </div>
+  `;
 }
 
 function highlightSemCov(el){
@@ -288,11 +394,74 @@ function highlightSemCov(el){
 }
 
 function showAll(){
+
   activeV=null;
-  document.querySelectorAll(".li").forEach(i=>i.classList.remove("active"));
-  document.getElementById("btn-todos").classList.add("active");
-  geojsonLayer&&geojsonLayer.eachLayer(l=>geojsonLayer.resetStyle(l));
-  document.getElementById("info-panel").innerHTML=`<h4>Município Selecionado</h4><div class="info-ph">Clique em um município no mapa</div>`;
+
+  document.querySelectorAll(".li")
+    .forEach(i=>i.classList.remove("active"));
+
+  document.getElementById("btn-todos")
+    .classList.add("active");
+
+  geojsonLayer.eachLayer(layer=>{
+
+    layer.setStyle({
+      fillColor:"#ffffff",
+      fillOpacity:1,
+      color:isDark() ? "#475569" : "#cbd5e1",
+      weight:0.8
+    });
+
+  });
+
+  const municipios=[];
+
+  allFeatures.forEach(f=>{
+
+    const nome=f.properties.nome || "";
+    const vendors=MV[norm(nome)] || [];
+
+    if(vendors.length){
+
+      municipios.push(`
+        <div style="
+          margin-bottom:10px;
+          padding-bottom:8px;
+          border-bottom:1px solid var(--border)
+        ">
+
+          <strong>${nome}</strong><br>
+
+          <span style="
+            color:var(--muted);
+            font-size:.75rem">
+
+            ${vendors[0].vend}
+
+          </span>
+
+        </div>
+      `);
+
+    }
+
+  });
+
+  document.getElementById("info-panel").innerHTML=`
+
+    <h4>Todos os Municípios</h4>
+
+    <div style="
+      margin-top:6px;
+      max-height:180px;
+      overflow-y:auto;
+      font-size:.75rem;
+      line-height:1.5">
+
+      ${municipios.join("")}
+
+    </div>
+  `;
 }
 
 function toggleTheme(){
