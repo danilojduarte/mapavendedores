@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Vendedores — Rio Grande do Norte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#30363d;
+  --text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;
+}
+body.light{
+  --bg:#f0f4f8;--surface:#ffffff;--surface2:#e8eef4;
+  --border:#c9d4df;--text:#1a202c;--muted:#5a6a7e;--accent:#2563eb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+header{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:1000;gap:12px;}
+.logo{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:-.02em}
+.logo span{color:var(--accent)}
+.hbtns{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.badge{background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 13px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;transition:all .2s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+main{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 53px)}
+.map-area{position:relative;overflow:hidden}
+#map{width:100%;height:100%}
+#loading{position:absolute;inset:0;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:16px;transition:opacity .4s;}
+#loading.hidden{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-size:.9rem;color:var(--muted)}
+.sidebar{border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;z-index:10}
+.sb-head{padding:16px 16px 12px;border-bottom:1px solid var(--border)}
+.sb-head h3{font-family:'Syne',sans-serif;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:2px}
+.sb-head p{font-size:.72rem;color:var(--muted)}
+.btn-todos-wrap{padding:8px 10px 4px;border-bottom:1px solid var(--border)}
+.btn-todos{width:100%;padding:7px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-todos:hover,.btn-todos.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.legend{padding:8px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:3px}
+.li{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent}
+.li:hover,.li.active{background:var(--surface2);border-color:var(--border)}
+.li-dot{width:13px;height:13px;border-radius:4px;flex-shrink:0}
+.li-name{font-size:.79rem;font-weight:500;flex:1;line-height:1.25;color:var(--text)}
+.li-cnt{font-size:.68rem;color:var(--muted);background:var(--bg);padding:2px 7px;border-radius:12px;font-weight:700}
+.li.no-cover .li-dot{background:transparent!important;border:1.5px dashed var(--muted)}
+.li.no-cover .li-name{color:var(--muted);font-style:italic}
+.legend-sep{border-top:1px solid var(--border);margin:5px 0}
+.stats{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:6px}
+.stat{text-align:center;flex:1}
+.stat-n{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--accent)}
+.stat-l{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.info{padding:13px;border-top:1px solid var(--border);background:var(--surface2);min-height:80px}
+.info h4{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px}
+.info-city{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:800;color:var(--text);margin-bottom:5px}
+.info-seller{display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--muted);margin-top:3px}
+.info-dot{width:9px;height:9px;border-radius:50%}
+.info-ph{font-size:.78rem;color:var(--muted);font-style:italic}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Mapa de Vendedores &mdash; <span>Rio Grande do Norte</span></div>
+  <div class="hbtns">
+    <span class="badge" id="badge-cov">Carregando...</span>
+    <button class="btn" onclick="toggleTheme()" id="btn-theme">☀️ Modo Claro</button>
+  </div>
+</header>
+<main>
+  <div class="map-area">
+    <div id="loading">
+      <div class="spinner"></div>
+      <p id="loading-msg">Carregando municípios do RN...</p>
+    </div>
+    <div id="map"></div>
+  </div>
+  <div class="sidebar">
+    <div class="sb-head">
+      <h3>Equipe de Vendas</h3>
+      <p>Clique para destacar a região do vendedor</p>
+    </div>
+    <div class="btn-todos-wrap">
+      <button class="btn-todos active" id="btn-todos" onclick="showAll()">🗺️ Todos os Vendedores</button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n">9</div><div class="stat-l">Vendedores</div></div>
+      <div class="stat"><div class="stat-n" id="s-cob">—</div><div class="stat-l">Cobertos</div></div>
+      <div class="stat"><div class="stat-n" id="s-sem">—</div><div class="stat-l">Sem cobertura</div></div>
+    </div>
+    <div class="info" id="info-panel">
+      <h4>Município Selecionado</h4>
+      <div class="info-ph">Clique em um município no mapa</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const VEND = {
+  "EDUARDO ARRUDA":{cor:"#f5c518",muns:["CURRAIS NOVOS","SAO JOAO DO SABUGI","CAICO","IPUEIRA","JARDIM DE PIRANHAS","PARELHAS","FLORANIA","ANGICOS","JUCURUTU","SANTA CRUZ","ACARI","LAGOA NOVA","CRUZETA","MACAU","TIMBAUBA DOS BATISTAS","TANGARA","GUAMARE","EQUADOR","JAPI","SERRA DO MEL","SAO JOSE DO SERIDO","JARDIM DO SERIDO","APODI","SERRA NEGRA DO NORTE","CARNAUBA DOS DANTAS","SAO VICENTE","OURO BRANCO","SANTANA DO SERIDO","BARAUNA","SAO BENTO DO TRAIRI","LAJES PINTADAS","MOSSORO","SAO RAFAEL","PEDRO AVELINO","LAJES"]},
+  "CARLOS ALBERTO":{cor:"#9ca3af",muns:["RODOLFO FERNANDES","MARTINS","TENENTE ANANIAS","ENCANTO","PILOES","APODI","SERRINHA DOS PINTOS","JOAO DIAS","PARANA","PATU","ALEXANDRIA","FRUTUOSO GOMES","UMARIZAL","AUGUSTO SEVERO","RAFAEL FERNANDES","PAU DOS FERROS","MARCELINO VIEIRA","CARAUBAS","LUIS GOMES","PARAU","ALMINO AFONSO","SAO MIGUEL","LUCRECIA","ITAU","DOUTOR SEVERIANO","MESSIAS TARGINO","FELIPE GUERRA","OLHO D AGUA DO BORGES","RIACHO DE SANTANA","MAJOR SALES","JOSE DA PENHA","SEVERIANO MELO","PORTALEGRE","RAFAEL GODEIRO","SAO FRANCISCO DO OESTE","VENHA VER","JANDUIS","ANTONIO MARTINS","FRANCISCO DANTAS","CORONEL JOAO PESSOA","TRIUNFO POTIGUAR","RIACHO DA CRUZ","ACU","SERRA NEGRA DO NORTE"]},
+  "HERIBERTO FELIX":{cor:"#fb923c",muns:["NATAL","PARNAMIRIM","MACAIBA","SAO JOSE DE MIPIBU","SAO GONCALO DO AMARANTE","NISIA FLORESTA","JOAO CAMARA","PEDRA PRETA"]},
+  "JOSE CESAR":{cor:"#fdba74",muns:["SAO PAULO DO POTENGI","CORONEL EZEQUIEL","SANTO ANTONIO","BREJINHO","LAJES","SAO PEDRO","PASSA E FICA","NATAL","JAPI","CERRO CORA","TANGARA","JACANA","BARCELONA","IELMO MARINHO","NOVA CRUZ","VERA CRUZ","SAO BENTO DO TRAIRI","SANTA CRUZ","CAMPO REDONDO","LAGOA D ANTA","SAO JOSE DE MIPIBU","CANGUARETAMA","GOIANINHA","SAO TOME","SAO JOSE DO CAMPESTRE","LAGOA SALGADA","LAGOA NOVA","PARNAMIRIM","CAICARA DO RIO DO VENTO","RUY BARBOSA","PRESIDENTE JUSCELINO","PASSAGEM","SAO VICENTE","MONTE ALEGRE","TENENTE LAURENTINO CRUZ","JANUARIO CICCO","RIACHUELO","SERRINHA","BOM JESUS","SERRA DE SAO BENTO","BODO","SITIO NOVO","SANTA MARIA","SENADOR ELOI DE SOUZA","ALTO DO RODRIGUES","LAJES PINTADAS"]},
+  "ALYSSON FERNANDO":{cor:"#d1d5db",muns:["NATAL","PARNAMIRIM","SAO JOSE DE MIPIBU","RIO DO FOGO","MONTE ALEGRE","SAO GONCALO DO AMARANTE","POCO BRANCO","TAIPU","LAGOA DE PEDRAS","CAICO","SANTA CRUZ","CEARA MIRIM","EXTREMOZ","SAO MIGUEL DO GOSTOSO","IELMO MARINHO"]},
+  "DASSAYEV RODRIGUES":{cor:"#4ade80",muns:["NATAL","PARNAMIRIM","NOVA CRUZ","MACAIBA","SAO GONCALO DO AMARANTE","EXTREMOZ","ACU","CURRAIS NOVOS","JOAO CAMARA","MACAU","TOUROS","CAICO","SAO JOSE DE MIPIBU","MOSSORO","CEARA MIRIM","ALTO DO RODRIGUES","CANGUARETAMA","SANTO ANTONIO"]},
+  "PEDRO PAULO":{cor:"#60a5fa",muns:["NATAL","JOAO CAMARA","SAO GONCALO DO AMARANTE","MAXARANGUAPE","GOIANINHA","EXTREMOZ","TOUROS","JANDAIRA","CEARA MIRIM","LAGOA D ANTA","SAO JOSE DE MIPIBU","CANGUARETAMA","TIBAU DO SUL","PARNAMIRIM","PEDRA GRANDE","BAIA FORMOSA","ARES","SAO BENTO DO NORTE","SAO MIGUEL DO GOSTOSO","SANTO ANTONIO","MONTANHAS","PEDRO VELHO","POCO BRANCO","TAIPU","RIO DO FOGO","SENADOR GEORGINO AVELINO","PUREZA","NISIA FLORESTA","PARAZINHO","LAGOA DE PEDRAS","ESPIRITO SANTO","VILA FLOR","VARZEA","LAJES"]},
+  "JULIO CESAR":{cor:"#f472b6",muns:["GUAMARE","MOSSORO","ACU","ANGICOS","SANTANA DO MATOS","PENDENCIAS","AREIA BRANCA","GOVERNADOR DIX SEPT ROSADO","MACAU","IPANGUACU","AFONSO BEZERRA","TIBAU","RIACHO DA CRUZ","GROSSOS","PORTO DO MANGUE","ITAJA","BARAUNA","SAO RAFAEL","ALTO DO RODRIGUES","JANDAIRA","FERNANDO PEDROZA","CARNAUBAIS","LAJES","CARAUBAS","PEDRO AVELINO","SERRA DO MEL"]},
+  "TAMILA DE ARAUJO":{cor:"#1e3a8a",muns:["CEARA MIRIM","TIBAU DO SUL"]}
+};
+
+function norm(s){
+  if(!s) return "";
+  return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[''`]/g,"").toUpperCase().replace(/\s+/g," ").trim();
+}
+
+// Índice município normalizado → vendedores
+const MV = {};
+Object.entries(VEND).forEach(([v,d])=>{
+  d.muns.forEach(m=>{
+    const k=norm(m);
+    if(!MV[k]) MV[k]=[];
+    if(!MV[k].find(x=>x.vend===v)) MV[k].push({vend:v,cor:d.cor});
+  });
+});
+
+const isDark = ()=>!document.body.classList.contains("light");
+const map = L.map("map",{zoomControl:true,attributionControl:true});
+
+let geojsonLayer=null, allFeatures=[], semCovNames=[], activeV=null;
+
+function styleFeature(feature){
+  const key = norm(feature.properties.nome||"");
+  const vendors = MV[key]||[];
+  const cor = vendors.length ? vendors[0].cor : null;
+  return{
+    fillColor: cor||"#334155",
+    fillOpacity: cor?0.82:0.25,
+    color: isDark()?"#475569":"#94a3b8",
+    weight:0.8,
+  };
+}
+
+function onEachFeature(feature,layer){
+  const name = feature.properties.nome||"";
+  const key  = norm(name);
+  const vendors = MV[key]||[];
+
+  layer.on({
+    mouseover: e=>{e.target.setStyle({weight:2.5,color:isDark()?"#ffffff":"#1e293b"});e.target.bringToFront();},
+    mouseout:  e=>{if(activeV===null) geojsonLayer&&geojsonLayer.resetStyle(e.target);},
+    click: ()=>{
+      const panel=document.getElementById("info-panel");
+      panel.innerHTML=`<h4>Município Selecionado</h4>
+        <div class="info-city">${name}</div>
+        ${vendors.length
+          ?vendors.map(v=>`<div class="info-seller"><div class="info-dot" style="background:${v.cor}"></div>${v.vend}</div>`).join("")
+          :`<div class="info-ph">Sem vendedor atribuído</div>`}`;
+    }
+  });
+
+  layer.bindTooltip(()=>{
+    const rows=vendors.length
+      ?vendors.map(v=>`<div style="display:flex;align-items:center;gap:7px;margin-top:4px;font-size:12px"><div style="width:8px;height:8px;border-radius:50%;background:${v.cor};flex-shrink:0"></div>${v.vend}</div>`).join("")
+      :`<div style="font-size:12px;font-style:italic;margin-top:3px;opacity:.7">Sem vendedor</div>`;
+    return`<div style="font-size:13px;font-weight:700;border-bottom:1px solid #444;padding-bottom:4px;margin-bottom:2px">${name}</div>${rows}`;
+  },{sticky:true,opacity:1});
+}
+
+async function loadMap(){
+  try{
+    document.getElementById("loading-msg").textContent="Carregando malha dos municípios...";
+
+    // 1) Busca o GeoJSON (codarea virá vazio de nome, mas temos codarea)
+    const geoResp = await fetch("https://servicodados.ibge.gov.br/api/v3/malhas/estados/24?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=municipio");
+    if(!geoResp.ok) throw new Error("Falha GeoJSON");
+    const gj = await geoResp.json();
+
+    document.getElementById("loading-msg").textContent="Carregando nomes dos municípios...";
+
+    // 2) Busca a lista de municípios do RN com nome e código
+    const munResp = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados/24/municipios");
+    if(!munResp.ok) throw new Error("Falha municípios");
+    const munList = await munResp.json();
+
+    // 3) Monta dicionário codarea → nome
+    const codeToName = {};
+    munList.forEach(m=>{
+      codeToName[String(m.id)] = m.nome;
+    });
+
+    // 4) Injeta o nome em cada feature usando codarea
+    gj.features.forEach(f=>{
+      const cod = String(f.properties.codarea||"");
+      f.properties.nome = codeToName[cod] || "";
+    });
+
+    console.log("Primeiro município após injeção:", gj.features[0].properties);
+    console.log("Amostra nomes:", gj.features.slice(0,5).map(f=>f.properties.nome));
+    console.log("Amostra normalizados:", gj.features.slice(0,5).map(f=>norm(f.properties.nome)));
+
+    allFeatures = gj.features;
+
+    // 5) Estatísticas
+    const covSet=new Set();
+    const semSet=[];
+    allFeatures.forEach(f=>{
+      const key=norm(f.properties.nome||"");
+      if(MV[key]&&MV[key].length) covSet.add(key);
+      else semSet.push(f.properties.nome||key);
+    });
+    semCovNames=[...new Set(semSet)].sort();
+
+    document.getElementById("s-cob").textContent=covSet.size;
+    document.getElementById("s-sem").textContent=semCovNames.length;
+    document.getElementById("badge-cov").textContent=covSet.size+" cobertos · "+semCovNames.length+" sem cobertura";
+
+    geojsonLayer=L.geoJSON(gj,{style:styleFeature,onEachFeature}).addTo(map);
+    map.fitBounds(geojsonLayer.getBounds(),{padding:[20,20]});
+    document.getElementById("loading").classList.add("hidden");
+    buildLegend();
+
+  }catch(e){
+    console.error(e);
+    document.getElementById("loading").innerHTML=`
+      <div style="font-size:2rem">⚠️</div>
+      <p style="color:var(--muted);text-align:center;max-width:280px">
+        Não foi possível carregar o mapa.<br><small>${e.message}</small>
+      </p>
+      <button class="btn" onclick="loadMap()" style="margin-top:8px">↩ Tentar novamente</button>`;
+  }
+}
+
+function buildLegend(){
+  const leg=document.getElementById("legend");
+  leg.innerHTML="";
+  Object.entries(VEND).forEach(([name,data])=>{
+    const cnt=[...new Set(data.muns.map(norm))].length;
+    const el=document.createElement("div");
+    el.className="li";
+    el.innerHTML=`<div class="li-dot" style="background:${data.cor}"></div><div class="li-name">${name}</div><div class="li-cnt">${cnt}</div>`;
+    el.addEventListener("click",()=>highlight(name,el));
+    leg.appendChild(el);
+  });
+  const sep=document.createElement("div");sep.className="legend-sep";leg.appendChild(sep);
+  const sc=document.createElement("div");sc.className="li no-cover";
+  sc.innerHTML=`<div class="li-dot"></div><div class="li-name">Sem cobertura</div><div class="li-cnt">${semCovNames.length}</div>`;
+  sc.addEventListener("click",()=>highlightSemCov(sc));
+  leg.appendChild(sc);
+}
+
+function highlight(v,el){
+  if(activeV===v){showAll();return;}
+  activeV=v;
+  document.querySelectorAll(".li").forEach(i=>i.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("btn-todos").classList.remove("active");
+  geojsonLayer&&geojsonLayer.eachLayer(layer=>{
+    const vendors=MV[norm(layer.feature.properties.nome||"")]||[];
+    const match=vendors.some(x=>x.vend===v);
+    layer.setStyle({fillOpacity:match?0.92:0.06,weight:match?1.5:0.4,color:match?(isDark()?"#ffffff":"#1e293b"):(isDark()?"#334155":"#cbd5e1")});
+    if(match)layer.bringToFront();
+  });
+  const muns=[...new Set(VEND[v].muns.map(m=>{
+    const f=allFeatures.find(f=>norm(f.properties.nome||"")==norm(m));
+    return f?f.properties.nome:m;
+  }))].sort();
+  document.getElementById("info-panel").innerHTML=`<h4>Vendedor Selecionado</h4>
+    <div class="info-city" style="display:flex;align-items:center;gap:8px"><div class="info-dot" style="background:${VEND[v].cor}"></div>${v}</div>
+    <div style="margin-top:7px;font-size:.71rem;color:var(--muted);line-height:1.7;max-height:85px;overflow-y:auto">${muns.join(" · ")}</div>`;
+}
+
+function highlightSemCov(el){
+  if(activeV==="__sem__"){showAll();return;}
+  activeV="__sem__";
+  document.querySelectorAll(".li").forEach(i=>i.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("btn-todos").classList.remove("active");
+  geojsonLayer&&geojsonLayer.eachLayer(layer=>{
+    const hasCov=MV[norm(layer.feature.properties.nome||"")]?.length>0;
+    layer.setStyle({fillOpacity:hasCov?0.06:0.85,fillColor:hasCov?"#334155":"#ef4444",weight:hasCov?0.4:1.2,color:hasCov?"#334155":(isDark()?"#fff":"#1e293b")});
+  });
+  document.getElementById("info-panel").innerHTML=`<h4>Sem Cobertura (${semCovNames.length})</h4>
+    <div style="margin-top:4px;font-size:.71rem;color:var(--muted);line-height:1.7;max-height:105px;overflow-y:auto">${semCovNames.join(" · ")}</div>`;
+}
+
+function showAll(){
+  activeV=null;
+  document.querySelectorAll(".li").forEach(i=>i.classList.remove("active"));
+  document.getElementById("btn-todos").classList.add("active");
+  geojsonLayer&&geojsonLayer.eachLayer(l=>geojsonLayer.resetStyle(l));
+  document.getElementById("info-panel").innerHTML=`<h4>Município Selecionado</h4><div class="info-ph">Clique em um município no mapa</div>`;
+}
+
+function toggleTheme(){
+  document.body.classList.toggle("light");
+  document.getElementById("btn-theme").textContent=document.body.classList.contains("light")?"🌙 Modo Escuro":"☀️ Modo Claro";
+  geojsonLayer&&geojsonLayer.eachLayer(l=>{if(activeV===null)geojsonLayer.resetStyle(l);});
+}
+
+loadMap();
+</script>
+</body>
+</html>
