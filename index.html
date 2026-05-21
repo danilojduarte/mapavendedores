@@ -6,6 +6,8 @@
 <title>Mapa de Vendedores — Rio Grande do Norte</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
   --bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#30363d;
@@ -17,11 +19,7 @@ body.light{
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
-header{
-  padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid var(--border);background:var(--surface);
-  position:sticky;top:0;z-index:1000;gap:12px;
-}
+header{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:1000;gap:12px;}
 .logo{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:-.02em}
 .logo span{color:var(--accent)}
 .hbtns{display:flex;gap:8px;align-items:center;flex-shrink:0}
@@ -31,11 +29,7 @@ header{
 main{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 53px)}
 .map-area{position:relative;overflow:hidden}
 #map{width:100%;height:100%}
-#loading{
-  position:absolute;inset:0;background:var(--surface);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  z-index:500;gap:16px;transition:opacity .4s;
-}
+#loading{position:absolute;inset:0;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:16px;transition:opacity .4s;}
 #loading.hidden{opacity:0;pointer-events:none}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -67,9 +61,6 @@ main{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 53px)}
 .info-dot{width:9px;height:9px;border-radius:50%}
 .info-ph{font-size:.78rem;color:var(--muted);font-style:italic}
 </style>
-<!-- Leaflet via unpkg para evitar bloqueio de tracking -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 <header>
@@ -83,7 +74,7 @@ main{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 53px)}
   <div class="map-area">
     <div id="loading">
       <div class="spinner"></div>
-      <p>Carregando mapa dos municípios do RN...</p>
+      <p id="loading-msg">Carregando municípios do RN...</p>
     </div>
     <div id="map"></div>
   </div>
@@ -109,7 +100,6 @@ main{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 53px)}
 </main>
 
 <script>
-// ── VENDEDORES ──────────────────────────────────────────────────────────────
 const VEND = {
   "EDUARDO ARRUDA":{cor:"#f5c518",muns:["CURRAIS NOVOS","SAO JOAO DO SABUGI","CAICO","IPUEIRA","JARDIM DE PIRANHAS","PARELHAS","FLORANIA","ANGICOS","JUCURUTU","SANTA CRUZ","ACARI","LAGOA NOVA","CRUZETA","MACAU","TIMBAUBA DOS BATISTAS","TANGARA","GUAMARE","EQUADOR","JAPI","SERRA DO MEL","SAO JOSE DO SERIDO","JARDIM DO SERIDO","APODI","SERRA NEGRA DO NORTE","CARNAUBA DOS DANTAS","SAO VICENTE","OURO BRANCO","SANTANA DO SERIDO","BARAUNA","SAO BENTO DO TRAIRI","LAJES PINTADAS","MOSSORO","SAO RAFAEL","PEDRO AVELINO","LAJES"]},
   "CARLOS ALBERTO":{cor:"#9ca3af",muns:["RODOLFO FERNANDES","MARTINS","TENENTE ANANIAS","ENCANTO","PILOES","APODI","SERRINHA DOS PINTOS","JOAO DIAS","PARANA","PATU","ALEXANDRIA","FRUTUOSO GOMES","UMARIZAL","AUGUSTO SEVERO","RAFAEL FERNANDES","PAU DOS FERROS","MARCELINO VIEIRA","CARAUBAS","LUIS GOMES","PARAU","ALMINO AFONSO","SAO MIGUEL","LUCRECIA","ITAU","DOUTOR SEVERIANO","MESSIAS TARGINO","FELIPE GUERRA","OLHO D AGUA DO BORGES","RIACHO DE SANTANA","MAJOR SALES","JOSE DA PENHA","SEVERIANO MELO","PORTALEGRE","RAFAEL GODEIRO","SAO FRANCISCO DO OESTE","VENHA VER","JANDUIS","ANTONIO MARTINS","FRANCISCO DANTAS","CORONEL JOAO PESSOA","TRIUNFO POTIGUAR","RIACHO DA CRUZ","ACU","SERRA NEGRA DO NORTE"]},
@@ -122,249 +112,193 @@ const VEND = {
   "TAMILA DE ARAUJO":{cor:"#1e3a8a",muns:["CEARA MIRIM","TIBAU DO SUL"]}
 };
 
-// ── NORMALIZAÇÃO ─────────────────────────────────────────────────────────────
-// Remove acentos, converte para maiúsculas, colapsa espaços, remove apóstrofos
-// Funciona tanto para "Mossoró" quanto "MOSSORO"
 function norm(s){
   if(!s) return "";
-  return String(s)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")  // remove diacríticos
-    .replace(/[''`]/g,"")             // remove apóstrofos
-    .toUpperCase()
-    .replace(/\s+/g," ")
-    .trim();
+  return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[''`]/g,"").toUpperCase().replace(/\s+/g," ").trim();
 }
 
-// Monta índice município (normalizado) → vendedores
+// Índice município normalizado → vendedores
 const MV = {};
 Object.entries(VEND).forEach(([v,d])=>{
   d.muns.forEach(m=>{
-    const k = norm(m);
+    const k=norm(m);
     if(!MV[k]) MV[k]=[];
-    if(!MV[k].find(x=>x.vend===v)) MV[k].push({vend:v, cor:d.cor});
+    if(!MV[k].find(x=>x.vend===v)) MV[k].push({vend:v,cor:d.cor});
   });
 });
 
-// DEBUG: loga as chaves do MV para conferência
-console.log("Chaves MV (amostra):", Object.keys(MV).slice(0,10));
-
-// ── MAPA ─────────────────────────────────────────────────────────────────────
 const isDark = ()=>!document.body.classList.contains("light");
-const map = L.map("map",{zoomControl:true, attributionControl:true});
+const map = L.map("map",{zoomControl:true,attributionControl:true});
 
 let geojsonLayer=null, allFeatures=[], semCovNames=[], activeV=null;
 
 function styleFeature(feature){
-  const key = norm(feature.properties.name || "");
-  const vendors = MV[key] || [];
+  const key = norm(feature.properties.nome||"");
+  const vendors = MV[key]||[];
   const cor = vendors.length ? vendors[0].cor : null;
   return{
-    fillColor: cor || "#334155",
-    fillOpacity: cor ? 0.82 : 0.25,
-    color: isDark() ? "#475569" : "#94a3b8",
-    weight: 0.8,
+    fillColor: cor||"#334155",
+    fillOpacity: cor?0.82:0.25,
+    color: isDark()?"#475569":"#94a3b8",
+    weight:0.8,
   };
 }
 
-function highlightFeature(e){
-  e.target.setStyle({weight:2.5, color: isDark()?"#ffffff":"#1e293b"});
-  e.target.bringToFront();
-}
-function resetHighlight(e){
-  if(activeV!==null) return;
-  geojsonLayer && geojsonLayer.resetStyle(e.target);
-}
-
-function onEachFeature(feature, layer){
-  const name = feature.properties.name || "";
+function onEachFeature(feature,layer){
+  const name = feature.properties.nome||"";
   const key  = norm(name);
-  const vendors = MV[key] || [];
+  const vendors = MV[key]||[];
 
   layer.on({
-    mouseover: highlightFeature,
-    mouseout:  resetHighlight,
+    mouseover: e=>{e.target.setStyle({weight:2.5,color:isDark()?"#ffffff":"#1e293b"});e.target.bringToFront();},
+    mouseout:  e=>{if(activeV===null) geojsonLayer&&geojsonLayer.resetStyle(e.target);},
     click: ()=>{
-      const panel = document.getElementById("info-panel");
-      panel.innerHTML = `<h4>Município Selecionado</h4>
+      const panel=document.getElementById("info-panel");
+      panel.innerHTML=`<h4>Município Selecionado</h4>
         <div class="info-city">${name}</div>
         ${vendors.length
-          ? vendors.map(v=>`<div class="info-seller"><div class="info-dot" style="background:${v.cor}"></div>${v.vend}</div>`).join("")
-          : `<div class="info-ph">Sem vendedor atribuído</div>`}`;
+          ?vendors.map(v=>`<div class="info-seller"><div class="info-dot" style="background:${v.cor}"></div>${v.vend}</div>`).join("")
+          :`<div class="info-ph">Sem vendedor atribuído</div>`}`;
     }
   });
 
   layer.bindTooltip(()=>{
-    const rows = vendors.length
-      ? vendors.map(v=>`<div style="display:flex;align-items:center;gap:7px;margin-top:4px;font-size:12px"><div style="width:8px;height:8px;border-radius:50%;background:${v.cor};flex-shrink:0"></div>${v.vend}</div>`).join("")
-      : `<div style="font-size:12px;font-style:italic;margin-top:3px;opacity:.7">Sem vendedor</div>`;
-    return `<div style="font-size:13px;font-weight:700;border-bottom:1px solid #444;padding-bottom:4px;margin-bottom:2px">${name}</div>${rows}`;
-  },{sticky:true, opacity:1});
+    const rows=vendors.length
+      ?vendors.map(v=>`<div style="display:flex;align-items:center;gap:7px;margin-top:4px;font-size:12px"><div style="width:8px;height:8px;border-radius:50%;background:${v.cor};flex-shrink:0"></div>${v.vend}</div>`).join("")
+      :`<div style="font-size:12px;font-style:italic;margin-top:3px;opacity:.7">Sem vendedor</div>`;
+    return`<div style="font-size:13px;font-weight:700;border-bottom:1px solid #444;padding-bottom:4px;margin-bottom:2px">${name}</div>${rows}`;
+  },{sticky:true,opacity:1});
 }
 
-// ── CARREGAR GEOJSON ──────────────────────────────────────────────────────────
 async function loadMap(){
-  // Tenta IBGE direto; fallback para mirror público
-  const urls = [
-    "https://servicodados.ibge.gov.br/api/v3/malhas/estados/24?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=municipio",
-    "https://raw.githubusercontent.com/tbrugz/geodata-br/master/geojson/geojs-24-mun.json"
-  ];
+  try{
+    document.getElementById("loading-msg").textContent="Carregando malha dos municípios...";
 
-  let gj = null;
-  for(const url of urls){
-    try{
-      const resp = await fetch(url);
-      if(!resp.ok) continue;
-      gj = await resp.json();
-      // Normaliza nome para o formato do IBGE caso venha do mirror
-      if(gj.features && gj.features[0] && !gj.features[0].properties.name){
-        gj.features.forEach(f=>{
-          f.properties.name = f.properties.NM_MUNICIP || f.properties.name || "";
-        });
-      }
-      console.log("GeoJSON carregado de:", url);
-      console.log("Primeiro município:", gj.features[0]?.properties);
-      break;
-    }catch(e){ console.warn("Falhou:", url, e); }
-  }
+    // 1) Busca o GeoJSON (codarea virá vazio de nome, mas temos codarea)
+    const geoResp = await fetch("https://servicodados.ibge.gov.br/api/v3/malhas/estados/24?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=municipio");
+    if(!geoResp.ok) throw new Error("Falha GeoJSON");
+    const gj = await geoResp.json();
 
-  if(!gj){
+    document.getElementById("loading-msg").textContent="Carregando nomes dos municípios...";
+
+    // 2) Busca a lista de municípios do RN com nome e código
+    const munResp = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados/24/municipios");
+    if(!munResp.ok) throw new Error("Falha municípios");
+    const munList = await munResp.json();
+
+    // 3) Monta dicionário codarea → nome
+    const codeToName = {};
+    munList.forEach(m=>{
+      codeToName[String(m.id)] = m.nome;
+    });
+
+    // 4) Injeta o nome em cada feature usando codarea
+    gj.features.forEach(f=>{
+      const cod = String(f.properties.codarea||"");
+      f.properties.nome = codeToName[cod] || "";
+    });
+
+    console.log("Primeiro município após injeção:", gj.features[0].properties);
+    console.log("Amostra nomes:", gj.features.slice(0,5).map(f=>f.properties.nome));
+    console.log("Amostra normalizados:", gj.features.slice(0,5).map(f=>norm(f.properties.nome)));
+
+    allFeatures = gj.features;
+
+    // 5) Estatísticas
+    const covSet=new Set();
+    const semSet=[];
+    allFeatures.forEach(f=>{
+      const key=norm(f.properties.nome||"");
+      if(MV[key]&&MV[key].length) covSet.add(key);
+      else semSet.push(f.properties.nome||key);
+    });
+    semCovNames=[...new Set(semSet)].sort();
+
+    document.getElementById("s-cob").textContent=covSet.size;
+    document.getElementById("s-sem").textContent=semCovNames.length;
+    document.getElementById("badge-cov").textContent=covSet.size+" cobertos · "+semCovNames.length+" sem cobertura";
+
+    geojsonLayer=L.geoJSON(gj,{style:styleFeature,onEachFeature}).addTo(map);
+    map.fitBounds(geojsonLayer.getBounds(),{padding:[20,20]});
+    document.getElementById("loading").classList.add("hidden");
+    buildLegend();
+
+  }catch(e){
+    console.error(e);
     document.getElementById("loading").innerHTML=`
       <div style="font-size:2rem">⚠️</div>
       <p style="color:var(--muted);text-align:center;max-width:280px">
-        Não foi possível carregar o mapa.<br>
-        <small>Verifique sua conexão com a internet.</small>
+        Não foi possível carregar o mapa.<br><small>${e.message}</small>
       </p>
       <button class="btn" onclick="loadMap()" style="margin-top:8px">↩ Tentar novamente</button>`;
-    return;
   }
-
-  allFeatures = gj.features;
-
-  // DEBUG: mostra os primeiros 5 nomes vindos da API
-  console.log("Nomes da API (primeiros 5):", allFeatures.slice(0,5).map(f=>f.properties.name));
-  console.log("Normalizados:", allFeatures.slice(0,5).map(f=>norm(f.properties.name)));
-
-  // Estatísticas de cobertura
-  const covSet = new Set();
-  const semSet = [];
-  allFeatures.forEach(f=>{
-    const key = norm(f.properties.name || "");
-    if(MV[key] && MV[key].length > 0) covSet.add(key);
-    else semSet.push(f.properties.name || key);
-  });
-  semCovNames = [...new Set(semSet)].sort();
-
-  document.getElementById("s-cob").textContent = covSet.size;
-  document.getElementById("s-sem").textContent = semCovNames.length;
-  document.getElementById("badge-cov").textContent = covSet.size+" cobertos · "+semCovNames.length+" sem cobertura";
-
-  geojsonLayer = L.geoJSON(gj,{
-    style: styleFeature,
-    onEachFeature: onEachFeature
-  }).addTo(map);
-
-  map.fitBounds(geojsonLayer.getBounds(),{padding:[20,20]});
-  document.getElementById("loading").classList.add("hidden");
-  buildLegend();
 }
 
-// ── LEGENDA ───────────────────────────────────────────────────────────────────
 function buildLegend(){
-  const leg = document.getElementById("legend");
-  leg.innerHTML = "";
-
+  const leg=document.getElementById("legend");
+  leg.innerHTML="";
   Object.entries(VEND).forEach(([name,data])=>{
-    const cnt = [...new Set(data.muns.map(norm))].length;
-    const el = document.createElement("div");
-    el.className = "li";
-    el.innerHTML = `<div class="li-dot" style="background:${data.cor}"></div>
-      <div class="li-name">${name}</div>
-      <div class="li-cnt">${cnt}</div>`;
+    const cnt=[...new Set(data.muns.map(norm))].length;
+    const el=document.createElement("div");
+    el.className="li";
+    el.innerHTML=`<div class="li-dot" style="background:${data.cor}"></div><div class="li-name">${name}</div><div class="li-cnt">${cnt}</div>`;
     el.addEventListener("click",()=>highlight(name,el));
     leg.appendChild(el);
   });
-
-  const sep = document.createElement("div"); sep.className="legend-sep"; leg.appendChild(sep);
-
-  const scEl = document.createElement("div");
-  scEl.className = "li no-cover";
-  scEl.innerHTML = `<div class="li-dot"></div>
-    <div class="li-name">Sem cobertura</div>
-    <div class="li-cnt">${semCovNames.length}</div>`;
-  scEl.addEventListener("click",()=>highlightSemCov(scEl));
-  leg.appendChild(scEl);
+  const sep=document.createElement("div");sep.className="legend-sep";leg.appendChild(sep);
+  const sc=document.createElement("div");sc.className="li no-cover";
+  sc.innerHTML=`<div class="li-dot"></div><div class="li-name">Sem cobertura</div><div class="li-cnt">${semCovNames.length}</div>`;
+  sc.addEventListener("click",()=>highlightSemCov(sc));
+  leg.appendChild(sc);
 }
 
-function highlight(v, el){
+function highlight(v,el){
   if(activeV===v){showAll();return;}
-  activeV = v;
+  activeV=v;
   document.querySelectorAll(".li").forEach(i=>i.classList.remove("active"));
   el.classList.add("active");
   document.getElementById("btn-todos").classList.remove("active");
-
-  geojsonLayer && geojsonLayer.eachLayer(layer=>{
-    const vendors = MV[norm(layer.feature.properties.name||"")] || [];
-    const match = vendors.some(x=>x.vend===v);
-    layer.setStyle({
-      fillOpacity: match ? 0.92 : 0.06,
-      weight: match ? 1.5 : 0.4,
-      color: match ? (isDark()?"#ffffff":"#1e293b") : (isDark()?"#334155":"#cbd5e1"),
-    });
-    if(match) layer.bringToFront();
+  geojsonLayer&&geojsonLayer.eachLayer(layer=>{
+    const vendors=MV[norm(layer.feature.properties.nome||"")]||[];
+    const match=vendors.some(x=>x.vend===v);
+    layer.setStyle({fillOpacity:match?0.92:0.06,weight:match?1.5:0.4,color:match?(isDark()?"#ffffff":"#1e293b"):(isDark()?"#334155":"#cbd5e1")});
+    if(match)layer.bringToFront();
   });
-
-  const muns = [...new Set(VEND[v].muns.map(m=>{
-    const f = allFeatures.find(f=>norm(f.properties.name||"")==norm(m));
-    return f ? f.properties.name : m;
+  const muns=[...new Set(VEND[v].muns.map(m=>{
+    const f=allFeatures.find(f=>norm(f.properties.nome||"")==norm(m));
+    return f?f.properties.nome:m;
   }))].sort();
-
   document.getElementById("info-panel").innerHTML=`<h4>Vendedor Selecionado</h4>
-    <div class="info-city" style="display:flex;align-items:center;gap:8px">
-      <div class="info-dot" style="background:${VEND[v].cor}"></div>${v}
-    </div>
-    <div style="margin-top:7px;font-size:.71rem;color:var(--muted);line-height:1.7;max-height:85px;overflow-y:auto">
-      ${muns.join(" · ")}
-    </div>`;
+    <div class="info-city" style="display:flex;align-items:center;gap:8px"><div class="info-dot" style="background:${VEND[v].cor}"></div>${v}</div>
+    <div style="margin-top:7px;font-size:.71rem;color:var(--muted);line-height:1.7;max-height:85px;overflow-y:auto">${muns.join(" · ")}</div>`;
 }
 
 function highlightSemCov(el){
   if(activeV==="__sem__"){showAll();return;}
-  activeV = "__sem__";
+  activeV="__sem__";
   document.querySelectorAll(".li").forEach(i=>i.classList.remove("active"));
   el.classList.add("active");
   document.getElementById("btn-todos").classList.remove("active");
-
-  geojsonLayer && geojsonLayer.eachLayer(layer=>{
-    const key = norm(layer.feature.properties.name||"");
-    const hasCov = MV[key] && MV[key].length > 0;
-    layer.setStyle({
-      fillOpacity: hasCov ? 0.06 : 0.85,
-      fillColor: hasCov ? "#334155" : "#ef4444",
-      weight: hasCov ? 0.4 : 1.2,
-      color: hasCov ? "#334155" : (isDark()?"#fff":"#1e293b"),
-    });
+  geojsonLayer&&geojsonLayer.eachLayer(layer=>{
+    const hasCov=MV[norm(layer.feature.properties.nome||"")]?.length>0;
+    layer.setStyle({fillOpacity:hasCov?0.06:0.85,fillColor:hasCov?"#334155":"#ef4444",weight:hasCov?0.4:1.2,color:hasCov?"#334155":(isDark()?"#fff":"#1e293b")});
   });
-
   document.getElementById("info-panel").innerHTML=`<h4>Sem Cobertura (${semCovNames.length})</h4>
-    <div style="margin-top:4px;font-size:.71rem;color:var(--muted);line-height:1.7;max-height:105px;overflow-y:auto">
-      ${semCovNames.join(" · ")}
-    </div>`;
+    <div style="margin-top:4px;font-size:.71rem;color:var(--muted);line-height:1.7;max-height:105px;overflow-y:auto">${semCovNames.join(" · ")}</div>`;
 }
 
 function showAll(){
-  activeV = null;
+  activeV=null;
   document.querySelectorAll(".li").forEach(i=>i.classList.remove("active"));
   document.getElementById("btn-todos").classList.add("active");
-  geojsonLayer && geojsonLayer.eachLayer(l=>geojsonLayer.resetStyle(l));
+  geojsonLayer&&geojsonLayer.eachLayer(l=>geojsonLayer.resetStyle(l));
   document.getElementById("info-panel").innerHTML=`<h4>Município Selecionado</h4><div class="info-ph">Clique em um município no mapa</div>`;
 }
 
 function toggleTheme(){
   document.body.classList.toggle("light");
-  document.getElementById("btn-theme").textContent =
-    document.body.classList.contains("light") ? "🌙 Modo Escuro" : "☀️ Modo Claro";
-  geojsonLayer && geojsonLayer.eachLayer(l=>{ if(activeV===null) geojsonLayer.resetStyle(l); });
+  document.getElementById("btn-theme").textContent=document.body.classList.contains("light")?"🌙 Modo Escuro":"☀️ Modo Claro";
+  geojsonLayer&&geojsonLayer.eachLayer(l=>{if(activeV===null)geojsonLayer.resetStyle(l);});
 }
 
 loadMap();
